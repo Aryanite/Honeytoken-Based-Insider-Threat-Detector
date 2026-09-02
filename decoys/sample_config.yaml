@@ -1,0 +1,15 @@
+# Enterprise Internal Service Configuration (Decoy)
+service:
+  name: "employee-benefits-sync"
+  environment: "production"
+  log_level: "info"
+
+database:
+  host: "db-internal-prod.corporate.local"
+  port: 5432
+  name: "benefits_db"
+  username: "svc_benefits_admin"
+  password: "SuperSecretProductionPassword2026!" # Decoy DB Honeytoken
+
+telemetry:
+  heartbeat_url: "http://127.0.0.1:8000/beacon/HONEYTOKEN_UUID_PLACEHOLDER"
