@@ -1,5 +1,4 @@
-from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,9 +8,10 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # Database: defaults to SQLite for local development
+    # To use PostgreSQL, set: postgresql://user:password@host/dbname
     DATABASE_URL: str = "sqlite:///./honeytoken.db"
 
-    # Beacon listener base URL used to construct canary links
+    # Beacon listener base URL used to construct canary tracking links
     BEACON_BASE_URL: str = "http://127.0.0.1:8000"
 
     # Security

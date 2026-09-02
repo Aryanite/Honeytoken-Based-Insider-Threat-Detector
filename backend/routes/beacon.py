@@ -9,29 +9,32 @@ from backend.models.trigger import TokenTrigger
 
 router = APIRouter(tags=["Beacon Telemetry"])
 
-# Standard 1x1 transparent GIF (43 bytes)
+# Standard 1x1 pixel transparent GIF payload
+# Base64: R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7
 TRANSPARENT_1X1_GIF = base64.b64decode(
     "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
 )
 
 
-def extract_client_telemetry(request: Request) -> Tuple[str, str, Dict[str, Any]]:
-    """Extract client IP (with proxy handling), User-Agent, and sanitized headers."""
-    # 1. Resolve source IP handling reverse proxies
+def _extract_client_telemetry(request: Request) -> Tuple[str, str, Dict[str, Any]]:
+    """
+    Extract client IP, User-Agent, and sanitized headers from an incoming request.
+
+    IP resolution respects the X-Forwarded-For header for reverse-proxy environments:
+    the leftmost entry in XFF is the originating client IP.
+    """
     forwarded_for = request.headers.get("x-forwarded-for")
     if forwarded_for:
-        # First IP in X-Forwarded-For is the real client IP
         source_ip = forwarded_for.split(",")[0].strip()
     elif request.client and request.client.host:
         source_ip = request.client.host
     else:
-        source_ip = "127.0.0.1"
+        source_ip = "0.0.0.0"
 
-    # 2. User-Agent
     user_agent = request.headers.get("user-agent", "Unknown")
 
-    # 3. Capture headers (exclude sensitive headers if any)
-    headers_dict = dict(request.headers)
+    # Capture all headers as a plain dict for JSON storage
+    headers_dict: Dict[str, Any] = dict(request.headers)
 
     return source_ip, user_agent, headers_dict
 
@@ -39,12 +42,15 @@ def extract_client_telemetry(request: Request) -> Tuple[str, str, Dict[str, Any]
 @router.get(
     "/beacon/{token_id}",
     summary="Telemetry Beacon Endpoint",
-    description="Public, unauthenticated listener capturing access attempts. Returns a 1x1 transparent GIF.",
+    description=(
+        "Public, unauthenticated endpoint. Captures access metadata and returns a "
+        "1x1 transparent GIF so the trigger is invisible to the accessing client."
+    ),
     response_class=Response,
     responses={
         200: {
             "content": {"image/gif": {}},
-            "description": "Returns 1x1 transparent GIF beacon",
+            "description": "Always returns a 1x1 transparent GIF beacon image.",
         }
     },
 )
@@ -52,15 +58,20 @@ def beacon_listener(
     token_id: str,
     request: Request,
     db: Session = Depends(get_db),
-):
-    """Handle incoming canary beacon triggers silently without breaking client applications."""
-    source_ip, user_agent, headers_dict = extract_client_telemetry(request)
+) -> Response:
+    """
+    Telemetry receiver for honeytoken access events.
 
-    # Check if token exists in database
+    - Logs a TokenTrigger record for any ACTIVE honeytoken that is accessed.
+    - Revoked or non-existent tokens are silently ignored (no trigger logged).
+    - Always returns a 1x1 transparent GIF regardless of token state to avoid
+      exposing information about the presence or status of a decoy to the accessor.
+    """
+    source_ip, user_agent, headers_dict = _extract_client_telemetry(request)
+
     token = db.query(HoneyToken).filter(HoneyToken.token_id == token_id).first()
 
     if token and token.status == "active":
-        # Log the access trigger event
         trigger = TokenTrigger(
             token_id=token.token_id,
             source_ip=source_ip,
@@ -70,7 +81,6 @@ def beacon_listener(
         db.add(trigger)
         db.commit()
 
-    # Always return 1x1 transparent GIF with anti-caching headers so client renders cleanly
     return Response(
         content=TRANSPARENT_1X1_GIF,
         media_type="image/gif",

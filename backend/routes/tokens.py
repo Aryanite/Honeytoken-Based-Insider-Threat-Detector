@@ -1,10 +1,11 @@
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as http_status
 from sqlalchemy.orm import Session
 
 from backend.db.session import get_db
 from backend.models.token import HoneyToken
-from backend.schemas.envelope import ApiResponse, success_response, error_response
+from backend.schemas.envelope import ApiResponse, success_response
 from backend.schemas.token import (
     TokenCreateSchema,
     TokenUpdateSchema,
@@ -19,14 +20,14 @@ router = APIRouter(prefix="/tokens", tags=["Tokens"])
 @router.post(
     "",
     response_model=ApiResponse[TokenResponseSchema],
-    status_code=status.HTTP_201_CREATED,
+    status_code=http_status.HTTP_201_CREATED,
     summary="Create a new honeytoken",
 )
 def create_token(
     payload: TokenCreateSchema,
     db: Session = Depends(get_db),
 ):
-    """Create a new honeytoken decoy and register it in the system."""
+    """Register a new honeytoken decoy and return its details including the beacon URL."""
     token = HoneyToken(
         name=payload.name,
         token_type=payload.token_type,
@@ -38,7 +39,6 @@ def create_token(
     db.add(token)
     db.commit()
     db.refresh(token)
-
     return success_response(TokenResponseSchema.from_orm_model(token))
 
 
@@ -48,26 +48,32 @@ def create_token(
     summary="List all honeytokens",
 )
 def list_tokens(
-    status: Optional[TokenStatus] = Query(None, description="Filter by status ('active' or 'revoked')"),
-    token_type: Optional[TokenType] = Query(None, description="Filter by token type"),
+    token_status: Optional[TokenStatus] = Query(
+        None,
+        alias="status",
+        description="Filter by operational status: 'active' or 'revoked'",
+    ),
+    token_type: Optional[TokenType] = Query(
+        None,
+        description="Filter by token type: api_key | canary_doc | db_record",
+    ),
     db: Session = Depends(get_db),
 ):
-    """Retrieve all registered honeytokens with optional status and type filtering."""
+    """Return all registered honeytokens with optional status and type filters."""
     query = db.query(HoneyToken)
-    if status:
-        query = query.filter(HoneyToken.status == status)
+    if token_status:
+        query = query.filter(HoneyToken.status == token_status)
     if token_type:
         query = query.filter(HoneyToken.token_type == token_type)
 
     tokens = query.order_by(HoneyToken.created_at.desc()).all()
-    data = [TokenResponseSchema.from_orm_model(t) for t in tokens]
-    return success_response(data)
+    return success_response([TokenResponseSchema.from_orm_model(t) for t in tokens])
 
 
 @router.get(
     "/{token_id}",
     response_model=ApiResponse[TokenResponseSchema],
-    summary="Get single honeytoken details",
+    summary="Get a single honeytoken",
 )
 def get_token(
     token_id: str,
@@ -77,10 +83,9 @@ def get_token(
     token = db.query(HoneyToken).filter(HoneyToken.token_id == token_id).first()
     if not token:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Honeytoken with ID '{token_id}' not found.",
         )
-
     return success_response(TokenResponseSchema.from_orm_model(token))
 
 
@@ -98,14 +103,11 @@ def update_token(
     token = db.query(HoneyToken).filter(HoneyToken.token_id == token_id).first()
     if not token:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Honeytoken with ID '{token_id}' not found.",
         )
-
-    update_data = payload.model_dump(exclude_unset=True)
-    for field, value in update_data.items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(token, field, value)
-
     db.commit()
     db.refresh(token)
     return success_response(TokenResponseSchema.from_orm_model(token))
@@ -120,17 +122,15 @@ def revoke_token(
     token_id: str,
     db: Session = Depends(get_db),
 ):
-    """Soft-delete/revoke a honeytoken so future triggers are flagged or deactivated."""
+    """Soft-revoke a honeytoken. Future beacon hits from revoked tokens are silently ignored."""
     token = db.query(HoneyToken).filter(HoneyToken.token_id == token_id).first()
     if not token:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail=f"Honeytoken with ID '{token_id}' not found.",
         )
-
     token.status = "revoked"
     db.commit()
-
     return success_response({
         "token_id": token_id,
         "status": "revoked",

@@ -1,6 +1,10 @@
-"""Seed script to populate initial sample honeytokens for local development and testing."""
+"""
+Seed script: populate the development database with representative sample honeytokens.
 
-import sys
+Run once after first launch:
+    python seed_test_data.py
+"""
+
 from backend.core.config import settings
 from backend.db.base import Base
 from backend.db.session import engine, SessionLocal
@@ -14,7 +18,7 @@ SAMPLE_TOKENS = [
         "token_type": "api_key",
         "criticality": 45,
         "status": "active",
-        "description": "Planted in engineering developer workstation repository in .env",
+        "description": "Planted in engineering workstation repository .env file",
         "placement_location": "repo://backend-service/.env",
     },
     {
@@ -30,7 +34,7 @@ SAMPLE_TOKENS = [
         "token_type": "db_record",
         "criticality": 50,
         "status": "active",
-        "description": "Synthetic database user entry inserted into production payroll database",
+        "description": "Synthetic database entry inserted into the production payroll database",
         "placement_location": "db://corporate-db/users/user_id=9999",
     },
     {
@@ -38,37 +42,46 @@ SAMPLE_TOKENS = [
         "token_type": "api_key",
         "criticality": 15,
         "status": "revoked",
-        "description": "Revoked token used to verify that revoked honeytokens do not generate active alerts",
+        "description": "Revoked token — verifies that revoked honeytokens do not generate active alerts",
         "placement_location": "wiki://engineering/deprecated_keys",
     },
 ]
 
 
-def seed_database():
-    print(f"Connecting to database: {settings.DATABASE_URL}")
+def seed_database() -> None:
+    """Create DB tables if they do not exist, then insert sample honeytokens."""
+    print(f"Database: {settings.DATABASE_URL}")
     Base.metadata.create_all(bind=engine)
 
     db = SessionLocal()
+    created_count = 0
     try:
-        created_count = 0
         for data in SAMPLE_TOKENS:
-            existing = db.query(HoneyToken).filter(HoneyToken.name == data["name"]).first()
-            if not existing:
-                token = HoneyToken(**data)
-                db.add(token)
-                db.commit()
-                db.refresh(token)
-                created_count += 1
-                print(f"[+] Created Honeytoken: {token.name}")
-                print(f"    - ID: {token.token_id}")
-                print(f"    - Type: {token.token_type} | Criticality: {token.criticality} | Status: {token.status}")
-                print(f"    - Beacon URL: {build_beacon_url(token.token_id)}\n")
-            else:
-                print(f"[*] Already exists: {existing.name} (ID: {existing.token_id})")
+            existing = (
+                db.query(HoneyToken)
+                .filter(HoneyToken.name == data["name"])
+                .first()
+            )
+            if existing:
+                print(f"[=] Already exists: {existing.name} (ID: {existing.token_id})")
+                continue
 
-        print(f"Seeding completed. {created_count} new honeytokens created.")
+            token = HoneyToken(**data)
+            db.add(token)
+            db.commit()
+            db.refresh(token)
+            created_count += 1
+            print(f"[+] Created: {token.name}")
+            print(f"    ID          : {token.token_id}")
+            print(f"    Type        : {token.token_type}")
+            print(f"    Criticality : {token.criticality}")
+            print(f"    Status      : {token.status}")
+            print(f"    Beacon URL  : {build_beacon_url(token.token_id)}")
+            print()
     finally:
         db.close()
+
+    print(f"Done. {created_count} honeytoken(s) created.")
 
 
 if __name__ == "__main__":
