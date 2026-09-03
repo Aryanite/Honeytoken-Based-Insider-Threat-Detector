@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Honeytoken Threat Detector — Security Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(16, 23, 41, 0.75);
+      --bg-card-hover: rgba(22, 33, 62, 0.85);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(99, 102, 241, 0.4);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-primary: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --crit-red: #ef4444;
+      --crit-bg: rgba(239, 68, 68, 0.15);
+      --high-orange: #f97316;
+      --high-bg: rgba(249, 115, 22, 0.15);
+      --med-yellow: #eab308;
+      --med-bg: rgba(234, 179, 8, 0.15);
+      --low-blue: #3b82f6;
+      --low-bg: rgba(59, 130, 246, 0.15);
+      --success-green: #10b981;
+      --success-bg: rgba(16, 185, 129, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.08) 0px, transparent 50%);
+      color: var(--text-primary);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* Top Navigation Header */
+    header {
+      backdrop-filter: blur(12px);
+      background: rgba(9, 13, 22, 0.85);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+      font-size: 1.25rem;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 0.4rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success-green);
+      box-shadow: 0 0 8px var(--success-green);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .btn {
+      padding: 0.55rem 1.15rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+    }
+    .btn-primary:hover {
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: var(--border-color);
+      color: var(--text-primary);
+    }
+    .btn-outline:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: var(--border-active);
+    }
+
+    .btn-danger-outline {
+      background: rgba(239, 68, 68, 0.05);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+    .btn-danger-outline:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--crit-red);
+    }
+
+    /* Main Container */
+    main {
+      padding: 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s ease;
+    }
+
+    .metric-card:hover {
+      border-color: var(--border-active);
+      transform: translateY(-2px);
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-accent, var(--accent-primary));
+    }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .metric-icon {
+      font-size: 1.25rem;
+      opacity: 0.8;
+    }
+
+    .metric-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 0.35rem;
+    }
+
+    .metric-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Two-Column Layout */
+    .dashboard-content {
+      display: grid;
+      grid-template-columns: 1.65fr 1fr;
+      gap: 2rem;
+    }
+
+    @media (max-width: 1200px) {
+      .dashboard-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Panel Styles */
+    .panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .panel-title-area {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .panel-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .badge-count {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    /* Controls Bar */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .select-input {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.55rem 0.85rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Data Table */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    thead {
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      padding: 0.85rem 1rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .token-name-cell {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .token-placement {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .type-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .type-api_key {
+      background: rgba(14, 165, 233, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(14, 165, 233, 0.3);
+    }
+
+    .type-canary_doc {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .type-db_record {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .crit-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .crit-progress {
+      width: 50px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .crit-fill {
+      height: 100%;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #3b82f6, #ef4444);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .status-active {
+      background: var(--success-bg);
+      color: var(--success-green);
+    }
+
+    .status-revoked {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.75rem;
+      border-radius: 6px;
+    }
+
+    /* Live Feed Column */
+    .live-feed-panel {
+      display: flex;
+      flex-direction: column;
+      max-height: 850px;
+    }
+
+    .feed-container {
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      padding-right: 0.35rem;
+    }
+
+    .feed-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .feed-container::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 9999px;
+    }
+
+    .alert-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem;
+      transition: all 0.2s ease;
+      animation: fadeIn 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert-card.critical {
+      border-color: rgba(239, 68, 68, 0.4);
+      background: rgba(239, 68, 68, 0.03);
+    }
+
+    .alert-card.critical::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--crit-red);
+    }
+
+    .alert-card.high::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--high-orange);
+    }
+
+    .alert-card.medium::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--med-yellow);
+    }
+
+    .alert-card.low::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--low-blue);
+    }
+
+    .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+    }
+
+    .sev-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.2rem 0.55rem;
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .sev-tag.critical { background: var(--crit-bg); color: var(--crit-red); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .sev-tag.high { background: var(--high-bg); color: var(--high-orange); border: 1px solid rgba(249, 115, 22, 0.3); }
+    .sev-tag.medium { background: var(--med-bg); color: var(--med-yellow); border: 1px solid rgba(234, 179, 8, 0.3); }
+    .sev-tag.low { background: var(--low-bg); color: var(--low-blue); border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    .alert-score {
+      font-size: 1.05rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .alert-token {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .alert-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 0.6rem;
+    }
+
+    .alert-details-box {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 8px;
+      padding: 0.65rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .alert-details-box p {
+      margin-bottom: 0.25rem;
+    }
+
+    .formula-badge {
+      color: #c084fc;
+      font-family: 'JetBrains Mono', monospace;
+      word-break: break-all;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      max-width: 550px;
+      width: 100%;
+      padding: 1.75rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+      animation: modalIn 0.2s ease;
+    }
+
+    @keyframes modalIn {
+      from { transform: scale(0.96); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.25rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .close-btn:hover { color: var(--text-primary); }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--accent-primary);
+    }
+
+    .slider-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #818cf8;
+      margin-left: 0.5rem;
+    }
+
+    .code-block {
+      background: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: #e2e8f0;
+      white-space: pre-wrap;
+      word-break: break-all;
+      max-height: 250px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">🛡️</div>
+      <div>
+        <div class="brand-title">Deception Threat Operations</div>
+        <div class="brand-subtitle">Honeytoken Incident Response Platform</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span id="sse-status">TELEMETRY STREAM CONNECTED</span>
+      </div>
+      <a href="/docs" target="_blank" class="btn btn-outline">API Docs (Swagger)</a>
+      <button class="btn btn-primary" onclick="openCreateModal()">
+        <span>+</span> Deploy Honeytoken
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Metric Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card" style="--card-accent: #10b981;">
+        <div class="metric-header">
+          <span class="metric-title">Active Decoys</span>
+          <span class="metric-icon">🟢</span>
+        </div>
+        <div class="metric-value" id="card-active-decoys">0</div>
+        <div class="metric-sub" id="card-total-decoys">0 total assets deployed</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: #f59e0b;">
+        <div class="metric-header">
+          <span class="metric-title">Today's Triggers</span>
+          <span class="metric-icon">⚡</span>
+        </div>
+        <div class="metric-value" id="card-today-triggers">0</div>
+        <div class="metric-sub" id="card-total-triggers">0 all-time incident pings</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: #ef4444;">
+        <div class="metric-header">
+          <span class="metric-title">Critical Threats</span>
+          <span class="metric-icon">🚨</span>
+        </div>
+        <div class="metric-value" id="card-critical-threats" style="color: #f87171;">0</div>
+        <div class="metric-sub">Score > 75.0 (immediate response required)</div>
+      </div>
+
+      <div class="metric-card" style="--card-accent: #8b5cf6;">
+        <div class="metric-header">
+          <span class="metric-title">Severity Triage</span>
+          <span class="metric-icon">📊</span>
+        </div>
+        <div class="metric-value" id="card-triage-summary" style="font-size: 1.25rem; margin-top: 0.5rem;">
+          <span style="color: #60a5fa;" id="badge-low">L: 0</span> &middot;
+          <span style="color: #facc15;" id="badge-med">M: 0</span> &middot;
+          <span style="color: #fb923c;" id="badge-high">H: 0</span> &middot;
+          <span style="color: #f87171;" id="badge-crit">C: 0</span>
+        </div>
+        <div class="metric-sub">Dynamic alert categorization</div>
+      </div>
+    </div>
+
+    <!-- Layout: Token Management Table + Live Incident Stream -->
+    <div class="dashboard-content">
+      
+      <!-- Left Panel: Token Management -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title-area">
+            <h2 class="panel-title">Token Management Console</h2>
+            <span class="badge-count" id="table-token-count">0 Deployed</span>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="loadDashboard()">🔄 Refresh</button>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="controls-bar">
+          <input 
+            type="text" 
+            id="token-search" 
+            class="search-input" 
+            placeholder="Search by asset name or UUID..." 
+            oninput="filterTokens()"
+          />
+          <select id="filter-status" class="select-input" onchange="filterTokens()">
+            <option value="all">All Statuses</option>
+            <option value="active">Active Only</option>
+            <option value="revoked">Revoked Only</option>
+          </select>
+          <select id="filter-type" class="select-input" onchange="filterTokens()">
+            <option value="all">All Types</option>
+            <option value="api_key">API Key</option>
+            <option value="canary_doc">Canary Doc</option>
+            <option value="db_record">Database Record</option>
+          </select>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Honeytoken Asset</th>
+                <th>Type</th>
+                <th>Criticality</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tokens-table-body">
+              <tr>
+                <td colspan="5" class="empty-state">Loading honeytoken assets...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Right Panel: Live Incident Monitor (SSE) -->
+      <section class="panel live-feed-panel">
+        <div class="panel-header">
+          <div class="panel-title-area">
+            <h2 class="panel-title">Live Incident Stream</h2>
+            <span class="badge-count" id="live-alert-count">0 Live</span>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Real-Time Push</span>
+        </div>
+
+        <div class="feed-container" id="alert-feed">
+          <div class="empty-state">
+            Waiting for beacon telemetry...<br/>
+            Access any deployed honeytoken to trigger real-time triage.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Create Honeytoken Modal -->
+  <div class="modal-backdrop" id="create-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Deploy New Honeytoken Decoy</h3>
+        <button class="close-btn" onclick="closeCreateModal()">&times;</button>
+      </div>
+      <form id="create-token-form" onsubmit="handleCreateToken(event)">
+        <div class="form-group">
+          <label class="form-label" for="new-name">Decoy Asset Name *</label>
+          <input type="text" id="new-name" class="form-input" placeholder="e.g. AWS Production S3 Read Key" required maxlength="100" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="new-type">Decoy Format Type *</label>
+          <select id="new-type" class="form-select">
+            <option value="api_key">API Key (Cloud / Internal Token)</option>
+            <option value="canary_doc">Canary Document (Word .docx / PDF)</option>
+            <option value="db_record">Database Record (Payroll / PII)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">
+            Criticality Weight (1 to 50): 
+            <span class="slider-val" id="criticality-display">25</span>
+          </label>
+          <input 
+            type="range" 
+            id="new-criticality" 
+            min="1" 
+            max="50" 
+            value="25" 
+            style="width: 100%; accent-color: #6366f1;" 
+            oninput="document.getElementById('criticality-display').innerText = this.value" 
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="new-placement">Placement Location</label>
+          <input type="text" id="new-placement" class="form-input" placeholder="e.g. repo://.env, s3://corporate-docs, HR-DB" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="new-desc">Description</label>
+          <input type="text" id="new-desc" class="form-input" placeholder="Operational notes or tripwire rationale" />
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Deploy Tripwire</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Preview Decoy Modal -->
+  <div class="modal-backdrop" id="preview-modal">
+    <div class="modal" style="max-width: 650px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="preview-modal-title">Decoy Asset Preview</h3>
+        <button class="close-btn" onclick="closePreviewModal()">&times;</button>
+      </div>
+      <div>
+        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+          Deploy this exact snippet or download the synthesized artifact to trap unauthorized internal access:
+        </p>
+        <pre class="code-block" id="preview-code-block"></pre>
+        <div id="preview-download-options" style="margin-bottom: 1rem; display: none;">
+          <span style="font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);">Direct Binary Downloads:</span>
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.35rem;">
+            <a id="btn-dl-docx" class="btn btn-outline btn-sm" href="#" target="_blank">📄 Download Word (.docx)</a>
+            <a id="btn-dl-pdf" class="btn btn-outline btn-sm" href="#" target="_blank">📑 Download PDF (.pdf)</a>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button class="btn btn-outline" onclick="copyPreviewText()">📋 Copy Snippet</button>
+        <button class="btn btn-primary" onclick="closePreviewModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Logic -->
+  <script>
+    let allTokens = [];
+    let alertCount = 0;
+
+    // Load initial dashboard stats and token list
+    async function loadDashboard() {
+      try {
+        // Fetch stats
+        const statsRes = await fetch('/api/v1/dashboard/stats');
+        const statsEnvelope = await statsRes.json();
+        if (statsEnvelope.status === 'success' && statsEnvelope.data) {
+          renderStats(statsEnvelope.data);
+        }
+
+        // Fetch tokens
+        const tokensRes = await fetch('/api/v1/tokens');
+        const tokensEnvelope = await tokensRes.json();
+        if (tokensEnvelope.status === 'success' && Array.isArray(tokensEnvelope.data)) {
+          allTokens = tokensEnvelope.data;
+          filterTokens();
+        }
+      } catch (err) {
+        console.error('Failed to load dashboard data:', err);
+      }
+    }
+
+    function renderStats(data) {
+      const m = data.metrics;
+      document.getElementById('card-active-decoys').innerText = m.active_decoys;
+      document.getElementById('card-total-decoys').innerText = `${m.total_decoys} total assets deployed (${m.revoked_decoys} revoked)`;
+      document.getElementById('card-today-triggers').innerText = m.today_triggers;
+      document.getElementById('card-total-triggers').innerText = `${m.total_triggers} all-time incident pings`;
+      document.getElementById('card-critical-threats').innerText = m.critical_threats;
+
+      const s = data.severity_breakdown;
+      document.getElementById('badge-low').innerText = `L: ${s.low}`;
+      document.getElementById('badge-med').innerText = `M: ${s.medium}`;
+      document.getElementById('badge-high').innerText = `H: ${s.high}`;
+      document.getElementById('badge-crit').innerText = `C: ${s.critical}`;
+
+      // Populate recent alerts if feed is currently empty
+      const feed = document.getElementById('alert-feed');
+      if (alertCount === 0 && data.recent_alerts && data.recent_alerts.length > 0) {
+        feed.innerHTML = '';
+        data.recent_alerts.forEach(a => {
+          prependAlertCard({
+            alert_id: a.alert_id,
+            severity: a.severity,
+            risk_score: a.risk_score,
+            token_name: a.token_name,
+            token_type: a.token_type,
+            source_ip: a.source_ip,
+            created_at: a.triggered_at,
+            details: { formula: `Archived Event: ${a.severity} Triage`, context_reasons: [] }
+          });
+        });
+      }
+    }
+
+    function filterTokens() {
+      const search = document.getElementById('token-search').value.toLowerCase().trim();
+      const statusFilter = document.getElementById('filter-status').value;
+      const typeFilter = document.getElementById('filter-type').value;
+
+      const filtered = allTokens.filter(t => {
+        const matchesSearch = !search || 
+          t.name.toLowerCase().includes(search) || 
+          t.token_id.toLowerCase().includes(search) ||
+          (t.placement_location && t.placement_location.toLowerCase().includes(search));
+        const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+        const matchesType = typeFilter === 'all' || t.token_type === typeFilter;
+        return matchesSearch && matchesStatus && matchesType;
+      });
+
+      renderTokensTable(filtered);
+    }
+
+    function renderTokensTable(tokens) {
+      const tbody = document.getElementById('tokens-table-body');
+      document.getElementById('table-token-count').innerText = `${tokens.length} Deployed`;
+
+      if (tokens.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No matching honeytoken assets found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = tokens.map(t => {
+        const typeIcon = t.token_type === 'api_key' ? '🔑' : t.token_type === 'canary_doc' ? '📄' : '🗄️';
+        const typeLabel = t.token_type === 'api_key' ? 'API Key' : t.token_type === 'canary_doc' ? 'Canary Doc' : 'DB Record';
+        const pct = Math.min(100, Math.round((t.criticality / 50) * 100));
+
+        return `
+          <tr>
+            <td>
+              <div class="token-name-cell">${escapeHtml(t.name)}</div>
+              <div class="token-placement">${escapeHtml(t.placement_location || t.token_id)}</div>
+            </td>
+            <td>
+              <span class="type-pill type-${t.token_type}">
+                <span>${typeIcon}</span> ${typeLabel}
+              </span>
+            </td>
+            <td>
+              <div class="crit-bar">
+                <span style="font-family: 'JetBrains Mono'; font-weight: 700; width: 20px;">${t.criticality}</span>
+                <div class="crit-progress">
+                  <div class="crit-fill" style="width: ${pct}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="status-badge status-${t.status}">
+                ${t.status === 'active' ? '● Active' : '○ Revoked'}
+              </span>
+            </td>
+            <td>
+              <div class="table-actions">
+                <button class="btn btn-outline btn-sm" onclick="openPreviewModal('${t.token_id}')">👁️ Preview</button>
+                ${t.status === 'active' ? `
+                  <button class="btn btn-danger-outline btn-sm" onclick="revokeToken('${t.token_id}')">Deactivate</button>
+                ` : `
+                  <span style="font-size: 0.72rem; color: var(--text-muted); align-self: center;">Revoked</span>
+                `}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function revokeToken(tokenId) {
+      if (!confirm('Are you sure you want to deactivate this honeytoken? Telemetry triggers will be silently ignored.')) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/tokens/${tokenId}`, { method: 'DELETE' });
+        const envelope = await res.json();
+        if (envelope.status === 'success') {
+          await loadDashboard();
+        } else {
+          alert('Error revoking token: ' + envelope.error);
+        }
+      } catch (err) {
+        alert('Network error revoking token.');
+      }
+    }
+
+    async function handleCreateToken(e) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById('new-name').value.trim(),
+        token_type: document.getElementById('new-type').value,
+        criticality: parseInt(document.getElementById('new-criticality').value, 10),
+        placement_location: document.getElementById('new-placement').value.trim() || null,
+        description: document.getElementById('new-desc').value.trim() || null,
+      };
+
+      try {
+        const res = await fetch('/api/v1/tokens', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const envelope = await res.json();
+        if (envelope.status === 'success') {
+          closeCreateModal();
+          document.getElementById('create-token-form').reset();
+          document.getElementById('criticality-display').innerText = '25';
+          await loadDashboard();
+          openPreviewModal(envelope.data.token_id);
+        } else {
+          alert('Failed to deploy token: ' + envelope.error);
+        }
+      } catch (err) {
+        alert('Network error submitting token deployment.');
+      }
+    }
+
+    async function openPreviewModal(tokenId) {
+      try {
+        const res = await fetch(`/api/v1/tokens/${tokenId}/decoy-preview`);
+        const envelope = await res.json();
+        if (envelope.status === 'success') {
+          const data = envelope.data;
+          document.getElementById('preview-modal-title').innerText = `Decoy Preview: ${data.token_name}`;
+          document.getElementById('preview-code-block').innerText = data.preview_snippet;
+
+          const dlBox = document.getElementById('preview-download-options');
+          if (data.token_type === 'canary_doc') {
+            dlBox.style.display = 'block';
+            document.getElementById('btn-dl-docx').href = `/api/v1/tokens/${data.token_id}/download?format=docx`;
+            document.getElementById('btn-dl-pdf').href = `/api/v1/tokens/${data.token_id}/download?format=pdf`;
+          } else {
+            dlBox.style.display = 'none';
+          }
+
+          document.getElementById('preview-modal').style.display = 'flex';
+        }
+      } catch (err) {
+        alert('Failed to fetch decoy preview.');
+      }
+    }
+
+    function closePreviewModal() {
+      document.getElementById('preview-modal').style.display = 'none';
+    }
+
+    function copyPreviewText() {
+      const text = document.getElementById('preview-code-block').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Decoy snippet copied to clipboard!');
+      });
+    }
+
+    function openCreateModal() {
+      document.getElementById('create-modal').style.display = 'flex';
+    }
+
+    function closeCreateModal() {
+      document.getElementById('create-modal').style.display = 'none';
+    }
+
+    // Connect to Server-Sent Events (SSE) Stream
+    function initEventStream() {
+      const sseStatus = document.getElementById('sse-status');
+      const eventSource = new EventSource('/api/v1/stream/alerts');
+
+      eventSource.addEventListener('connected', (e) => {
+        sseStatus.innerText = 'TELEMETRY STREAM CONNECTED';
+      });
+
+      eventSource.addEventListener('alert', (e) => {
+        try {
+          const alertData = JSON.parse(e.data);
+          prependAlertCard(alertData);
+          // Refresh dashboard stats counters on new alert
+          fetch('/api/v1/dashboard/stats')
+            .then(r => r.json())
+            .then(env => { if (env.data) renderStats(env.data); });
+        } catch (err) {
+          console.error('Failed to parse incoming alert event:', err);
+        }
+      });
+
+      eventSource.onerror = () => {
+        sseStatus.innerText = 'STREAM RECONNECTING...';
+      };
+    }
+
+    function prependAlertCard(data) {
+      const feed = document.getElementById('alert-feed');
+      if (alertCount === 0) {
+        feed.innerHTML = '';
+      }
+      alertCount++;
+      document.getElementById('live-alert-count').innerText = `${alertCount} Live`;
+
+      const sev = (data.severity || 'low').toLowerCase();
+      const card = document.createElement('div');
+      card.className = `alert-card ${sev}`;
+
+      const reasons = (data.details && data.details.context_reasons) ? data.details.context_reasons.join(' &middot; ') : '';
+      const formula = (data.details && data.details.formula) ? data.details.formula : `Dynamic Score: ${data.risk_score}`;
+
+      card.innerHTML = `
+        <div class="alert-header">
+          <span class="sev-tag ${sev}">${data.severity} SEVERITY</span>
+          <span class="alert-score">${Number(data.risk_score).toFixed(1)}</span>
+        </div>
+        <div class="alert-token">${escapeHtml(data.token_name || 'Honeytoken Decoy')}</div>
+        <div class="alert-meta">
+          <div>IP: <span>${escapeHtml(data.source_ip || 'Unknown')}</span></div>
+          <div>Time: <span>${formatTime(data.created_at)}</span></div>
+        </div>
+        <div class="alert-details-box">
+          <p class="formula-badge">${escapeHtml(formula)}</p>
+          ${reasons ? `<p>${escapeHtml(reasons)}</p>` : ''}
+        </div>
+      `;
+
+      feed.prepend(card);
+    }
+
+    function formatTime(isoStr) {
+      if (!isoStr) return 'Just now';
+      try {
+        const d = new Date(isoStr);
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      } catch {
+        return isoStr;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Startup
+    window.addEventListener('DOMContentLoaded', () => {
+      loadDashboard();
+      initEventStream();
+    });
+  </script>
+</body>
+</html>

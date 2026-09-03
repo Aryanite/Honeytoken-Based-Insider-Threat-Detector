@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, DateTime, desc
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Integer, DateTime
+from sqlalchemy.orm import relationship, synonym
 from backend.db.base import Base
 
 
@@ -23,6 +23,9 @@ class HoneyToken(Base):
     status = Column(String(20), nullable=False, default="active")
     description = Column(String(255), nullable=True)
     placement_location = Column(String(255), nullable=True)
+    # Synonym for backwards-compatibility with placement argument
+    placement = synonym("placement_location")
+
     created_at = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),

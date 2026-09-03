@@ -6,6 +6,8 @@ from sqlalchemy.orm import Session
 from backend.db.session import get_db
 from backend.models.token import HoneyToken
 from backend.models.trigger import TokenTrigger
+from backend.services.risk_scoring import evaluate_and_log_alert
+from backend.core.rate_limiter import rate_limiter
 
 router = APIRouter(tags=["Beacon Telemetry"])
 
@@ -44,7 +46,8 @@ def _extract_client_telemetry(request: Request) -> Tuple[str, str, Dict[str, Any
     summary="Telemetry Beacon Endpoint",
     description=(
         "Public, unauthenticated endpoint. Captures access metadata and returns a "
-        "1x1 transparent GIF so the trigger is invisible to the accessing client."
+        "1x1 transparent GIF so the trigger is invisible to the accessing client. "
+        "Automatically routes active triggers into the dynamic risk-scoring pipeline."
     ),
     response_class=Response,
     responses={
@@ -62,16 +65,24 @@ def beacon_listener(
     """
     Telemetry receiver for honeytoken access events.
 
+    - Rate-limited per source IP using a sliding-window algorithm.
     - Logs a TokenTrigger record for any ACTIVE honeytoken that is accessed.
+    - Triggers dynamic risk-scoring evaluation and real-time alert dispatch.
     - Revoked or non-existent tokens are silently ignored (no trigger logged).
     - Always returns a 1x1 transparent GIF regardless of token state to avoid
       exposing information about the presence or status of a decoy to the accessor.
     """
     source_ip, user_agent, headers_dict = _extract_client_telemetry(request)
 
+    # Check sliding window rate limiter (60 req / min per IP)
+    allowed, count, retry_after = rate_limiter.is_allowed(
+        f"beacon:{source_ip}", limit=60, window_seconds=60
+    )
+
     token = db.query(HoneyToken).filter(HoneyToken.token_id == token_id).first()
 
-    if token and token.status == "active":
+    # Only log if token is active and not aggressively rate-banned
+    if token and token.status == "active" and allowed:
         trigger = TokenTrigger(
             token_id=token.token_id,
             source_ip=source_ip,
@@ -80,6 +91,10 @@ def beacon_listener(
         )
         db.add(trigger)
         db.commit()
+        db.refresh(trigger)
+
+        # Trigger dynamic risk scoring and real-time alert dispatch
+        evaluate_and_log_alert(db, trigger, token)
 
     return Response(
         content=TRANSPARENT_1X1_GIF,

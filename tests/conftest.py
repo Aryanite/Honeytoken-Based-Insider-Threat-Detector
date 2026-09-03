@@ -1,22 +1,24 @@
+import os
+import tempfile
 import pytest
 import pytest_asyncio
 from typing import AsyncGenerator, Generator
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import StaticPool
 
 from backend.db.base import Base
 from backend.db.session import get_db
 from backend.main import app
 
-# Isolated in-memory SQLite database for tests — never touches the development DB
-TEST_DATABASE_URL = "sqlite:///:memory:"
+# Isolated temporary database for tests — never touches the development DB
+TEST_DIR = tempfile.mkdtemp()
+TEST_DATABASE_PATH = os.path.join(TEST_DIR, "test_suite.db")
+TEST_DATABASE_URL = f"sqlite:///{TEST_DATABASE_PATH}"
 
 test_engine = create_engine(
     TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
+    connect_args={"check_same_thread": False, "timeout": 30},
 )
 
 TestingSessionLocal = sessionmaker(
@@ -44,14 +46,14 @@ def db_session() -> Generator[Session, None, None]:
 @pytest_asyncio.fixture(scope="function")
 async def client(db_session: Session) -> AsyncGenerator[AsyncClient, None]:
     """
-    Provide an async HTTP test client with the database dependency overridden
-    to use the isolated in-memory test session.
+    Provide an async HTTP test client with per-request database sessions.
     """
     def override_get_db():
+        session = TestingSessionLocal()
         try:
-            yield db_session
+            yield session
         finally:
-            pass
+            session.close()
 
     app.dependency_overrides[get_db] = override_get_db
     transport = ASGITransport(app=app)
