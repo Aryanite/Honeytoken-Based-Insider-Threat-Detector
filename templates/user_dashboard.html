@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resource Center | CyberGuard SOC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="brand">🛡️ CyberGuard SOC</div>
+      <div class="subtitle">Authorized Resource Center · Enterprise Document Repository</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="user-pill">EMPLOYEE PORTAL</span>
+      <a href="/admin/login" style="color:var(--text-muted); font-size:13px; text-decoration:none;">Admin Login</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">INTERNAL RESOURCE PORTAL</p>
+        <h1>Authorized Company Documents</h1>
+        <p class="muted">Access corporate files, operational records, and strategic memoranda under organizational policy.</p>
+      </div>
+      <div class="notice-mini">🔒 Active Audit & Integrity Monitoring</div>
+    </section>
+
+    <div class="file-grid">
+      {% for token in tokens %}
+        <article class="file-card">
+          <div class="file-icon">
+            {% if token.get('filename', '').endswith('.pdf') %}
+              📕
+            {% elif token.get('filename', '').endswith('.docx') %}
+              📘
+            {% elif token.get('filename', '').endswith(('.env', '.yaml', '.yml')) %}
+              ⚙️
+            {% else %}
+              📄
+            {% endif %}
+          </div>
+          <div class="file-info">
+            <span class="file-type">RESTRICTED DOCUMENT</span>
+            <h2>{{ token.get('filename', 'Protected Document') }}</h2>
+            <p>Internal corporate resource · Discretionary access</p>
+            <span class="status active">Available</span>
+          </div>
+          <a class="primary-btn" href="{{ url_for('user_open_file', token_id=token['token_id']) }}">Access File</a>
+        </article>
+      {% else %}
+        <div class="panel" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+          <h2>No resources currently available</h2>
+          <p class="muted">Check back later or contact your system administrator.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="security-note">
+      <strong>Enterprise Compliance Notice:</strong>
+      <span>Access to all company digital assets is governed by the organization's Acceptable Use Policy and is cryptographically audited in real time by CyberGuard SOC.</span>
+    </div>
+  </main>
+</body>
+</html>

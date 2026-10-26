@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resource Status | CyberGuard SOC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="center-page">
+  <div class="access-card">
+    {% if blocked %}
+      <div class="big-icon">⛔</div>
+      <div class="eyebrow" style="color:var(--danger)">ACCESS DENIED</div>
+      <h1>Workstation Blocked</h1>
+      <p>This source IP address has been isolated by the Security Operations Center (CyberGuard SOC).</p>
+      <p class="muted">Access attempts from quarantined hosts are logged and escalated.</p>
+    {% else %}
+      <div class="big-icon">🔒</div>
+      <div class="eyebrow">RESOURCE TELEMETRY VERIFIED</div>
+      <h1>Access Verification</h1>
+      <p><strong>{{ filename }}</strong> has been accessed under organizational security monitoring.</p>
+      <p class="muted">CyberGuard SOC has cryptographically verified and logged this access event.</p>
+    {% endif %}
+    <a class="primary-btn" href="/user-dashboard">Return to Resource Center</a>
+  </div>
+</body>
+</html>

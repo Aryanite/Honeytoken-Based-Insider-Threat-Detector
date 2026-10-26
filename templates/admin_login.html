@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Login | CyberGuard SOC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="auth-body">
+  <div class="auth-card">
+    <div class="brand-mark">🛡️</div>
+    <h1>CyberGuard SOC</h1>
+    <p class="muted">Security Operations Console · Honeytoken Insider Threat Detection</p>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="post" action="/admin/login">
+      <label for="usernameInput">Administrator Username</label>
+      <input id="usernameInput" name="username" value="admin" required autocomplete="username">
+
+      <label for="passwordInput">Password</label>
+      <input id="passwordInput" name="password" type="password" required autocomplete="current-password" placeholder="••••••••">
+
+      <button type="submit" class="primary-btn full">Sign In to SOC Console</button>
+    </form>
+    
+    <p class="login-note">Authorized Security Personnel Only · Real-Time Incident Logging Active</p>
+    <div class="academic-footer">
+      School of Computer Science & Engineering · IILM University
+    </div>
+  </div>
+</body>
+</html>
