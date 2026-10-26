@@ -48,7 +48,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
-# Environments
+# Environments & Local Secrets
 .env
 .venv
 env/
@@ -57,7 +57,7 @@ ENV/
 env.bak/
 venv.bak/
 
-# Database
+# Database files
 *.db
 *.sqlite3
 
@@ -65,10 +65,21 @@ venv.bak/
 admin_config.json
 database/admin_config.json
 
-# Runtime Generated Test Decoy Files
-decoy_files/*_*
-decoy_files/test_*
-decoy_files/verify_*
+# Runtime Generated Test Decoy Files (Ignore dynamically generated test copies)
+decoy_files/*_00*
+decoy_files/*_Test*
+decoy_files/*test*
+decoy_files/*Test*
+decoy_files/*Quarantine*
+decoy_files/*Decommissioned*
+decoy_files/*Sensitive*
+
+# Keep baseline decoy samples & folder structure
+!decoy_files/.gitkeep
+!decoy_files/Executive_Payroll_2026.pdf
+!decoy_files/board_strategy.docx
+!decoy_files/aws_prod_credentials.env
+!decoy_files/aws_keys.env
 
 # Logs
 *.log
@@ -82,4 +93,3 @@ decoy_files/verify_*
 # OS files
 .DS_Store
 Thumbs.db
-

@@ -1,0 +1,97 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<<
+  /Type /Catalog
+  /Pages 2 0 R
+  /OpenAction 5 0 R
+>>
+endobj
+2 0 obj
+<<
+  /Type /Pages
+  /Kids [3 0 R]
+  /Count 1
+>>
+endobj
+3 0 obj
+<<
+  /Type /Page
+  /Parent 2 0 R
+  /MediaBox [0 0 612 792]
+  /Contents 4 0 R
+  /Resources <<
+    /Font <<
+      /F1 <<
+        /Type /Font
+        /Subtype /Type1
+        /BaseFont /Helvetica
+      >>
+    >>
+  >>
+  /Annots [6 0 R]
+>>
+endobj
+4 0 obj
+<< /Length 695 >>
+stream
+BT
+/F1 18 Tf
+50 740 Td
+(CYBERGUARD SOC - CONFIDENTIAL INTERNAL PAYROLL) Tj
+/F1 10 Tf
+0 -25 Td
+(Document: Executive_Payroll_2026.pdf | Generated: 2026-10-26 17:31:00) Tj
+0 -25 Td
+(Tracking Asset ID: 37bb69e0f833250749b75bb2eafc4f8d) Tj
+0 -20 Td
+(Classification: RESTRICTED - EXECUTIVE BOARD ONLY) Tj
+0 -30 Td
+/F1 12 Tf
+(Executive Compensation Matrix FY2026-27:) Tj
+0 -20 Td
+( - CEO: Base Salary $450,000 | Stock Options: 120,000 Shares) Tj
+0 -18 Td
+( - CTO: Base Salary $380,000 | Stock Options: 95,000 Shares) Tj
+0 -18 Td
+( - CFO: Base Salary $360,000 | Stock Options: 90,000 Shares) Tj
+0 -35 Td
+/F1 10 Tf
+(Security Notice: Access to this file is cryptographically monitored and audited.) Tj
+ET
+
+endstream
+endobj
+5 0 obj
+<<
+  /Type /Action
+  /S /URI
+  /URI (http://192.168.29.238:5000/beacon/37bb69e0f833250749b75bb2eafc4f8d)
+>>
+endobj
+6 0 obj
+<<
+  /Type /Annot
+  /Subtype /Link
+  /Rect [50 710 500 760]
+  /Border [0 0 0]
+  /A 5 0 R
+>>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000088 00000 n 
+0000000151 00000 n 
+0000000400 00000 n 
+0000001146 00000 n 
+0000001269 00000 n 
+trailer
+<<
+  /Size 7
+  /Root 1 0 R
+>>
+startxref
+1376
+%%EOF
