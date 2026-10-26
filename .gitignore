@@ -61,6 +61,15 @@ venv.bak/
 *.db
 *.sqlite3
 
+# Runtime Authentication & Admin Configuration
+admin_config.json
+database/admin_config.json
+
+# Runtime Generated Test Decoy Files
+decoy_files/*_*
+decoy_files/test_*
+decoy_files/verify_*
+
 # Logs
 *.log
 
@@ -73,3 +82,4 @@ venv.bak/
 # OS files
 .DS_Store
 Thumbs.db
+
